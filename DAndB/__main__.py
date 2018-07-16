@@ -22,8 +22,9 @@ if __name__ == '__main__':
         print("现在是", DBGame.current_player_color, "方下棋")
         if isinstance(DBGame._current_player, AIPlayer):
             print('你是AI')
-            print(blue_player.longest_chain_from(DBGame.board, dict(), 1, 1, 0))
-            DBGame.transform_player()
+            coordinate = blue_player.find_move(game=DBGame, depth=30, during_time=60, verbose=False)
+            print(coordinate)
+            DBGame.move(Piece(DBGame.current_player_color, coordinate))
         else:
             coordinate = input('输入下棋')
             try:

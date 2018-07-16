@@ -63,12 +63,40 @@ class Game:
     def datetime(self):
         return self._datetime
 
+    def copy(self):
+        res = Game(red_player=self.red_player, blue_player=self.blue_player)
+        res._current_player = self._current_player
+        # print(res.current_player_color)
+        res._board = self.board
+        return res
+
+    #根据当前棋谱获得可下坐标
+    def get_moves(self):
+        lis = []
+        for i in range(len(self.board.pieces)):
+            if i % 2 == 0:
+                for j in (1, 3, 5, 7, 9):
+                    if self.board.pieces[i][j] == 0:
+                        x = 'abcdef'[int((j - 1) / 2)]
+                        y = int(6 - i / 2)
+                        str1 = x + str(y) + 'h'
+                        lis.append(str1)
+            else:
+                for j in (0, 2, 4, 6, 8, 10):
+                    if self.board.pieces[i][j] == 0:
+                        x = 'abcdef'[int(j / 2)]
+                        y = int(6 - (i + 1) / 2)
+                        str1 = x + str(y) + 'v'
+                        lis.append(str1)
+        return lis
+
+
     def move(self, piece):
         if (self.is_end):
             raise MoveError("Game is over")
 
-        if (piece.color != self.current_player_color):
-            raise MoveError("Player color is wrong")
+        # if (piece.color != self.current_player_color):
+        #     raise MoveError("Player color is wrong")
 
         self._board.set_piece(piece)
 

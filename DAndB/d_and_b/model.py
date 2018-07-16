@@ -123,6 +123,7 @@ class Board:
         self._pieces[x][y] = 0
 
 
+
 class BoardError(DBException):
     def __init__(self, *args, **kwargs):
         super(BoardError, self).__init__(args, kwargs)
