@@ -64,10 +64,7 @@ class Game:
         return self._datetime
 
     def copy(self):
-        res = Game(red_player=self.red_player, blue_player=self.blue_player)
-        res._current_player = self._current_player
-        # print(res.current_player_color)
-        res._board = self.board
+        res = copy.deepcopy(self)
         return res
 
     #根据当前棋谱获得可下坐标

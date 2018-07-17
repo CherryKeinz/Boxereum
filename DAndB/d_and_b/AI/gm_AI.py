@@ -161,7 +161,6 @@ class GMAI(AIPlayer):
             t_now = time.time()
             if t_now > t_deadline:
                 break
-        state = rootstate.copy()
         print(state.red_player.score)
         sample_rate = float(iterations) / (t_now - t_start)
         print("%s samples per second" % (sample_rate))
