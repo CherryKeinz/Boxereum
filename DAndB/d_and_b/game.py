@@ -6,13 +6,11 @@ from .model import *
 
 class Game:
     def __init__(self, red_player, blue_player):
-        if (not (red_player.color == Color.red and blue_player.color == Color.blue)):
+        if (not (red_player.color == RED and blue_player.color == BLUE)):
             raise GameError("Invalid players", red_player, blue_player)
 
         self._red_player = red_player
-        self._red_player._start_new_game()
         self._blue_player = blue_player
-        self._blue_player._start_new_game()
         self._current_player = self._red_player
         self._piece_history = PieceHistory()
         self._board = Board()
@@ -53,9 +51,9 @@ class Game:
     def winner(self):
         if (self.is_end):
             if (self._red_player.score > self._blue_player.score):
-                return Color.red
+                return RED
             else:
-                return Color.blue
+                return BLUE
         else:
             return None
 
@@ -87,49 +85,47 @@ class Game:
                         lis.append(str1)
         return lis
 
-
-    def move(self, piece):
+    #下棋
+    def move(self, coordinate, color):
         if (self.is_end):
             raise MoveError("Game is over")
 
-        # if (piece.color != self.current_player_color):
-        #     raise MoveError("Player color is wrong")
+        if (color != self.current_player_color):
+            raise MoveError("Player color is wrong")
 
-        self._board.set_piece(piece)
+        x, y = self.coordinate_exchange(coordinate)
+        self._board.set_piece(x, y)
 
-        x = piece.coordinate[0]
-        y = piece.coordinate[1]
         score = 0  # 本次得分，用于记录这次落子得分数量
         if self._check_box((x, y-1)):  # 判断格坐标合法性的逻辑在_check_box()函数中
             score = score + 1
-            self._board.set_box((x, y-1), (self._current_player.color, self._current_player.score + score))
+            self._board.set_box((x, y-1))
         if self._check_box((x, y+1)):
             score = score + 1
-            self._board.set_box((x, y+1), (self._current_player.color, self._current_player.score + score))
+            self._board.set_box((x, y+1))
         if self._check_box((x-1, y)):
             score = score + 1
-            self._board.set_box((x-1, y), (self._current_player.color, self._current_player.score + score))
+            self._board.set_box((x-1, y))
         if self._check_box((x+1, y)):
             score = score + 1
-            self._board.set_box((x+1, y), (self._current_player.color, self._current_player.score + score))
+            self._board.set_box((x+1, y))
         if (score == 0):  # 如果没得分，就换玩家
-            self._current_player = self._blue_player if (self._current_player.color == Color.red) else self._red_player
+            self._current_player = self._blue_player if (self._current_player.color == RED) else self._red_player
         else:
             self._current_player._score = self._current_player.score + score
 
-        self._piece_history.add(piece)
+        self._piece_history.add(coordinate, color)
 
     def transform_player(self):
-        self._current_player = self._blue_player if (self._current_player.color == Color.red) else self._red_player
+        self._current_player = self._blue_player if (self._current_player.color == RED) else self._red_player
 
     def back(self):
         if (self._piece_history.len == 0):
             raise BackError()
 
-        piece = self._piece_history.delete()
+        [coordinate, color] = self._piece_history.delete()
 
-        x = piece.coordinate[0]
-        y = piece.coordinate[1]
+        x, y = self.coordinate_exchange(coordinate)
         score = 0  # 本次得分，用于记录这次落子得分数量
         if self._check_box((x, y-1)):  # 判断格坐标合法性的逻辑在_check_box()函数中
             self._board.unset_box((x, y-1))
@@ -144,11 +140,11 @@ class Game:
             self._board.unset_box((x+1, y))
             score = score + 1
         if (score == 0):  # 如果没得分，就换玩家
-            self._current_player = self._blue_player if (self._current_player.color == Color.red) else self._red_player
+            self._current_player = self._blue_player if (self._current_player.color == RED) else self._red_player
         else:
             self._current_player._score = self._current_player.score - score
 
-        self._board.unset_piece(piece)
+        self._board.unset_piece(x, y)
 
     def _check_box(self, box_coordinate):  # 判断格子是否封闭
         x = box_coordinate[0]
@@ -166,6 +162,42 @@ class Game:
             return False
 
         return True
+
+    def coordinate_exchange(self, user_coordinate):  # 坐标转换函数
+        x = 12 - 2 * int(user_coordinate[1])
+        y = "abcdef".index(user_coordinate[0]) * 2
+
+        if (user_coordinate[2] == 'v'):
+            x = x - 1
+        elif (user_coordinate[2] == 'h'):
+            y = y + 1
+        else:
+            raise BoardError("Wrong piece coordinate.")
+
+        if (x > 10 or y > 10 or (x + y) % 2 == 0):  # 判断转换的坐标是否合法，当坐标为点或格子时，x+y为偶数
+            raise BoardError("Wrong piece coordinate.")
+
+        return x, y
+
+    def get_box_edge(self, i, j):
+        count = 0
+        if self._board.pieces[i - 1][j] == 1:
+            count += 1
+        if self._board.pieces[i + 1][j] == 1:
+            count += 1
+        if self._board.pieces[i][j - 1] == 1:
+            count += 1
+        if self._board.pieces[i][j + 1] == 1:
+            count += 1
+        return count
+
+    def get_box_count(self, nSide):
+        count = 0
+        for i in (1, 3, 5, 7, 9):
+            for j in (1, 3, 5, 7, 9):
+                if self.get_box_edge(i, j) == nSide:
+                    count += 1
+        return count
 
 
 class GameError(DBException):

@@ -81,6 +81,7 @@ class GMAI(AIPlayer):
             Return the best move from the rootstate."""
 
         rootnode = Node(game_state=rootstate)
+        print("rootstate color is ", rootstate.current_player_color)
         debugStr = "rootState is " + str(rootstate)
 
         me = rootstate.current_player_color
@@ -102,19 +103,22 @@ class GMAI(AIPlayer):
 
             # 选择
             while node.untriedMoves == [] and node.childNodes != []:
+                # for child in node.childNodes:
+                #     print(state.current_player_color)
+                #     print(child.playerTurn)
                 # debugStr += "\tAll movies tried, selecting a child.\n"
                 # debugStr += rootnode.TreeToString(1)
                 node = node.UCTSelectChild()
                 # print(node.playerTurn)
-                piece = Piece(node.playerTurn, node.move)
-                state.move(piece)
+                state.move(node.move, state.current_player_color)
                 debugStr += "\tSelected node " + node.move + ".\n"
 
             # 扩展
             if node.untriedMoves != []:
                 m = random.choice(node.untriedMoves)
-                piece = Piece(node.playerTurn, m)
-                state.move(piece)
+                # print(node.playerTurn)
+                state.move(m, node.playerTurn)
+                # print(state.current_player_color)
                 node = node.AddChild(m, state)
                 debugStr += "\t\tCreating child " + node.move + ".\n"
 
@@ -136,16 +140,15 @@ class GMAI(AIPlayer):
                 state.apply_move(best_move)
                 """
                 m = random.choice(state.get_moves())
-                piece = Piece(state.current_player_color, m)
-                state.move(piece)
+                state.move(m, state.current_player_color)
                 depth += 1
 
             # 反向传播
             score = state.score
-            if me == Color.blue:
+            if me == BLUE:
                 gamescore = score[1] - score[0]
             else:
-                gamescore =  score[0] - score[1]
+                gamescore = score[0] - score[1]
             debugStr += "\t\tSimulation score is " + str(gamescore) + ".\n"
             while node != None:
                 if node.parentNode != None:
@@ -206,101 +209,6 @@ class GMAI(AIPlayer):
 
         super(GMAI, self).last_move(piece, board, next_player_color)
 
-    def move(self):
-        print(self.step_num)
-        if self.step_num < 30:
-            if len(self.box[1]) > 0:
-                x, y = random.choice(self.box[1])
-                if self.board[x+1][y] == 0:
-                    super(GMAI, self).move(self.coordinate_exchange((x+1, y)))
-                    return
-                if self.board[x-1][y] == 0:
-                    super(GMAI, self).move(self.coordinate_exchange((x-1, y)))
-                    return
-                if self.board[x][y+1] == 0:
-                    super(GMAI, self).move(self.coordinate_exchange((x, y+1)))
-                    return
-                if self.board[x][y-1] == 0:
-                    super(GMAI, self).move(self.coordinate_exchange((x, y-1)))
-                    return
-        # if self.step_num < 24:
-            arr = []
-            if len(self.box[4]) > 0:
-                for x, y in self.box[4]:
-                    if x + 2 < 10:
-                        if self.board[x+2][y] != 2:
-                            arr.append((x+1, y))
-                    else:
-                        arr.append((x+1, y))
-                    if x - 2 > 0:
-                        if self.board[x-2][y] != 2:
-                            arr.append((x-1, y))
-                    else:
-                        arr.append((x-1, y))
-                    if y + 2 < 10:
-                        if self.board[x][y+2] != 2:
-                            arr.append((x, y+1))
-                    else:
-                        arr.append((x, y+1))
-                    if x - 2 > 0:
-                        if self.board[x][y-2] != 2:
-                            arr.append((x, y-1))
-                    else:
-                        arr.append((x, y-1))
-            elif len(self.box[3]) > 0:
-                for x, y in self.box[3]:
-                    if self.board[x+1][y] == 0:
-                        if x + 2 < 10:
-                            if self.board[x+2][y] != 2:
-                                arr.append((x+1, y))
-                        else:
-                            arr.append((x+1, y))
-                    if self.board[x-1][y] == 0:
-                        if x - 2 > 0:
-                            if self.board[x-2][y] != 2:
-                                arr.append((x-1, y))
-                        else:
-                            arr.append((x-1, y))
-                    if self.board[x][y+1] == 0:
-                        if y + 2 < 10:
-                            if self.board[x][y+2] != 2:
-                                arr.append((x, y+1))
-                        else:
-                            arr.append((x, y+1))
-                    if self.board[x][y-1] == 0:
-                        if y - 2 > 0:
-                            if self.board[x][y-2] != 2:
-                                arr.append((x, y-1))
-                        else:
-                            arr.append((x, y-1))
-            if len(arr) > 0:
-                super(GMAI, self).move(self.coordinate_exchange(random.choice(arr)))
-                return
-            if len(self.box[3]) > 0:
-                x, y = random.choice(self.box[3])
-                if self.board[x+1][y] == 0:
-                    arr.append((x+1, y))
-                if self.board[x-1][y] == 0:
-                    arr.append((x-1, y))
-                if self.board[x][y+1] == 0:
-                    arr.append((x, y+1))
-                if self.board[x][y-1] == 0:
-                    arr.append((x, y-1))
-            if len(arr) > 0:
-                super(GMAI, self).move(self.coordinate_exchange(random.choice(arr)))
-                return
-
-        # 在这实现你的落子算法
-        while True:
-            coordinate = (random.choice("abcdef"), random.choice("123456"), random.choice(["h", "v"]))
-            try:
-                self._board.set_piece(Piece(self.color, coordinate))
-                break
-            except (PieceCoordinateError, BoardError):
-                continue
-        print("random")
-        super(GMAI, self).move(coordinate)
-
     def coordinate_exchange(self, coordinate):  # 坐标转换函数
         x, y = coordinate
         type = 'h' if x % 2 == 0 else 'v'
@@ -308,25 +216,3 @@ class GMAI(AIPlayer):
         x = str(int(6 - x / 2))
         y = ['a', 'b', 'c', 'd', 'e', 'f'][y//2]
         return (y, x, type)
-
-    def longest_chain_from(self, board, visited, i, j, length):
-        place = str(i) + str(j)
-        if not (i > 0 and i < 10 and j > 0 and j < 10) or place in visited:
-            return length
-
-        visited[place] = True
-
-        # find openings
-        horizontal, vertical = board.pieces[i - 1][j] and board.pieces[i + 1][j], board.pieces[i][j - 1] and board.pieces[i][j + 1]
-
-        # follow each opening and return length
-        if horizontal:
-            return max(self.longest_chain_from(board, visited, i, j - 2, length + 1),
-                       self.longest_chain_from(board, visited, i, j + 2, length + 1))
-        elif vertical:
-            return max(self.longest_chain_from(board, visited, i - 2, j, length + 1),
-                       self.longest_chain_from(board, visited, i + 2, j, length + 1))
-        return length
-
-    def find_coordinate(self, board):
-        self.longest_chain_from(board, dict(), 1, 1, 0)

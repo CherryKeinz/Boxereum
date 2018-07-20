@@ -3,9 +3,8 @@ from enum import Enum
 from datetime import datetime
 
 
-class Color(Enum):
-    red = 1
-    blue = 2
+RED = 1
+BLUE = -1
 
 
 class DBException(Exception):
@@ -13,58 +12,6 @@ class DBException(Exception):
         super(DBException, self).__init__(args, kwargs)
         if (len(args[0]) > 0):
             self.info = args[0][0]
-
-
-class Piece:
-    def __init__(self, color, user_coordinate):  # 坐标合法性检查在坐标转换函数中完成
-        self._color = color
-        self._coordinate = self._coordinate_exchange(user_coordinate)  # 坐标转换，把('b', '4', 'v')转换为(3, 2)
-        self._user_coordinate = user_coordinate  # 用户坐标，如('b', '4', 'v')
-        self._datetime = datetime.now()
-        self.annotation = ""
-
-    @property
-    def color(self):
-        return self._color
-
-    @property
-    def coordinate(self):
-        return self._coordinate
-
-    @property
-    def user_coordinate(self):
-        return self._user_coordinate
-
-    @property
-    def datetime(self):
-        return self._datetime
-
-    def __eq__(self, other):
-        if isinstance(other, Piece):
-            return (self.color == other.color and self.coordinate == other.coordinate)
-        else:
-            return False
-
-    def _coordinate_exchange(self, user_coordinate):  # 坐标转换函数
-        x = 12 - 2 * int(user_coordinate[1])
-        y = "abcdef".index(user_coordinate[0]) * 2
-
-        if (user_coordinate[2] == 'v'):
-            x = x - 1
-        elif (user_coordinate[2] == 'h'):
-            y = y + 1
-        else:
-            raise PieceCoordinateError("Wrong piece coordinate.")
-
-        if (x > 10 or y > 10 or (x + y) % 2 == 0):  # 判断转换的坐标是否合法，当坐标为点或格子时，x+y为偶数
-            raise PieceCoordinateError("Wrong piece coordinate.")
-
-        return (x, y)
-
-
-class PieceCoordinateError(DBException):
-    def __init__(self, *args, **kwargs):
-        super(PieceCoordinateError, self).__init__(args, kwargs)
 
 # 棋盘类
 class Board:
@@ -86,16 +33,13 @@ class Board:
     def pieces(self):
         return self._pieces.copy()
 
-    def set_piece(self, piece):
-        x = piece.coordinate[0]
-        y = piece.coordinate[1]
-
+    def set_piece(self, x, y):
         if (self._pieces[x][y] != 0):  # 如果已有棋子则抛出异常
             raise BoardError("Cannot set piece")
 
         self._pieces[x][y] = 1
 
-    def set_box(self, coordinate, box):
+    def set_box(self, coordinate):
         x = coordinate[0]
         y = coordinate[1]
 
@@ -104,10 +48,7 @@ class Board:
 
         self._pieces[x][y] = 2
 
-    def unset_piece(self, piece):
-        x = piece.coordinate[0]
-        y = piece.coordinate[1]
-
+    def unset_piece(self, x, y):
         if (self._pieces[x][y] == 0):  # 如果没有棋子则抛出异常
             raise BoardError("Cannot unset piece")
 
@@ -121,6 +62,27 @@ class Board:
             raise BoardError("Cannot unset box")
 
         self._pieces[x][y] = 0
+
+    #根据当前棋谱获得可下坐标
+    def get_moves(self):
+        lis = []
+        for i in range(len(self.pieces)):
+            if i % 2 == 0:
+                for j in (1, 3, 5, 7, 9):
+                    if self.pieces[i][j] == 0:
+                        x = 'abcdef'[int((j - 1) / 2)]
+                        y = int(6 - i / 2)
+                        str1 = x + str(y) + 'h'
+                        lis.append(str1)
+            else:
+                for j in (0, 2, 4, 6, 8, 10):
+                    if self.pieces[i][j] == 0:
+                        x = 'abcdef'[int(j / 2)]
+                        y = int(6 - (i + 1) / 2)
+                        str1 = x + str(y) + 'v'
+                        lis.append(str1)
+        return lis
+
 
 
 
@@ -141,8 +103,8 @@ class PieceHistory():
     def len(self):
         return len(self._list)
 
-    def add(self, piece):
-        self._list.append(piece)
+    def add(self, coordinate, color):
+        self._list.append([coordinate, color])
 
     def delete(self):
         return self._list.pop()

@@ -7,7 +7,7 @@ import sys
 
 from .player import *
 from .model import Color
-from .AI.gm_AI import GMAI
+from .AI.uct_AI import GMAI
 from .game import Game
 
 
@@ -17,7 +17,7 @@ PLAYER1_COLOR = [255, 0, 0]
 PLAYER2_COLOR = [0, 0, 255]
 BOARD_RANGE_MIN = 70
 BOARD_RANGE_MAX = 500
-CONVERSION = {0:"a6",1:"b6",2:"c6",3:"d6",4:"e6",5:"f6",6:"a5",7:"b5",8:"c6",9:"d5",10:"e5",11:"f5",12:"a4",13:"b4",14:"c4",15:"d4",16:"e4",17:"f4",18:"a3",19:"b3",20:"c3",21:"d3",22:"e3",23:"f3",24:"a2",25:"b2",26:"c2",27:"d2",28:"e2",29:"f2",30:"a1",31:"b1",32:"c1",33:"d1",34:"e1",35:"f1"}
+CONVERSION = {0:"a6",1:"b6",2:"c6",3:"d6",4:"e6",5:"f6",6:"a5",7:"b5",8:"c5",9:"d5",10:"e5",11:"f5",12:"a4",13:"b4",14:"c4",15:"d4",16:"e4",17:"f4",18:"a3",19:"b3",20:"c3",21:"d3",22:"e3",23:"f3",24:"a2",25:"b2",26:"c2",27:"d2",28:"e2",29:"f2",30:"a1",31:"b1",32:"c1",33:"d1",34:"e1",35:"f1"}
 class UI():
     def __init__(self):
         pygame.init()
@@ -55,7 +55,7 @@ class UI():
         self.points = {}
         for i in range(0, 6):
             for j in range(0, 6):
-                self.points[i * 6 + j] = ((i + 1) * 75,(j + 1) * 75)
+                self.points[i * 6 + j] = ((j + 1) * 75,(i + 1) * 75)
                 pygame.draw.circle(self.screen, [0, 0, 0], self.points[i * 6 + j], 2, 0)
         pygame.display.update()
         # AI move
@@ -87,6 +87,7 @@ class UI():
                         self.DBGame.move(Piece(self.DBGame.current_player_color, self.point2str(pointA, pointB)))
                         hist_pieces = self.DBGame.history
                         for piece in hist_pieces:
+                            print('\n')
                             # print(piece.user_coordinate, piece.color)
                             for r in self.DBGame.board.pieces:
                                 print(r)
@@ -227,7 +228,7 @@ class UI():
         else:
             for k, v in CONVERSION.items():
                 if v == str[:-1]:
-                    return k, k + 6
+                    return k, k - 6
 
 ui = UI()
 ui.start()
